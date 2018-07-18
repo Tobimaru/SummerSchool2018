@@ -168,6 +168,9 @@ void ss_fill(Field& x, const double value)
 // alpha is a scalar
 void ss_axpy(Field& y, const double alpha, Field const& x)
 {
+    const int n = x.length();   
+    auto h = cublas_handle();
+    cublasDaxpy(h, n, &alpha, x.device_data(), 1, y.device_data(), 1);
 }
 
 // computes y = alpha*(l-r)
