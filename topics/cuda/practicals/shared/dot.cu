@@ -16,7 +16,7 @@ double dot_host(const double *x, const double* y, int n) {
 // TODO implement dot product kernel
 template <int THREADS>
 __global__
-void dot_gpu_kernel(const double *x, const double* y, double *result, int n) {
+void dot_gpu_kernel(const double *x, const double *y, double *result, const int n) {
 
     __shared__ double sums[THREADS];
 
@@ -55,9 +55,16 @@ void dot_gpu_kernel(const double *x, const double* y, double *result, int n) {
 
 double dot_gpu(const double *x, const double* y, int n) {
     static double* result = malloc_managed<double>(1);
-   
+  
     const int maxThreads = 1024;
-    dot_gpu_kernel<maxThreads><<<1,n,maxThreads>>>(x, y, result, n);
+
+    for (int i = 0; i < n; i += maxThreads)
+    {
+        double sum = 0.0;
+        dot_gpu_kernel<maxThreads><<<1, maxThreads, maxThreads>>>
+        (x+i, y+i, &sum, maxThreads);
+        *result += sum;
+    }
 
     cudaDeviceSynchronize();
     return *result;
