@@ -69,6 +69,13 @@ void scale(double *y, const double *x, const double val, int n){
     }
 }
 
+__global__
+void lcomb(double *y, const double *x, const double *z, double alpha, double beta, int n){
+    auto i = threadIdx.x + blockDim.x*blockIdx.x;
+    if (i < n) {
+        y[i] = alpha * x[i] + beta * z[i];
+    }
+}
 } // namespace kernels
 
 bool cg_initialized = false;
@@ -211,9 +218,11 @@ void ss_scale(Field& y, const double alpha, Field& x)
 // y, x and z are vectors
 void ss_lcomb(Field& y, const double alpha, Field& x, const double beta, Field const& z)
 {
+    const int n = y.length();                                          
+    auto grid_dim = calculate_grid_dim(block_dim, n);
+    kernels::lcomb<<<grid_dim, block_dim>>>(
+        y.device_data(), x.device_data(), z.device_data(), alpha, beta, n);
 }
-
-// conjugate gradient solver
 // solve the linear system A*x = b for x
 // the matrix A is implicit in the objective function for the diffusion equation
 // the value in x constitute the "first guess" at the solution
