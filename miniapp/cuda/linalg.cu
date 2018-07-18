@@ -40,9 +40,19 @@ void copy(double *y, const double* x, int n) {
 }
 
 __global__
-void fill(double *x, const double val){
+void fill(double *x, const double val, int n){
     auto i = threadIdx.x + blockDim.x*blockIdx.x;
-    x[i] = val;
+    if (i < n) {
+        x[i] = val;
+    }
+}
+
+__global__
+void scale(double *y, const double *x, const double val, int n){
+    auto i = threadIdx.x + blockDim.x*blockIdx.x;
+    if (i < n) {
+        y[i] = x[i] * val;
+    }
 }
 } // namespace kernels
 
@@ -150,7 +160,7 @@ void ss_fill(Field& x, const double value)
 {
     const int n = x.length();
     auto grid_dim = calculate_grid_dim(block_dim, n);
-    kernels::fill<<<grid_dim, block_dim>>>(x.device_data(), value); 
+    kernels::fill<<<grid_dim, block_dim>>>(x.device_data(), value, n); 
 }
 
 // computes y := alpha*x + y
@@ -172,6 +182,9 @@ void ss_scaled_diff(Field& y, const double alpha, Field const& l, Field const& r
 // y and x are vectors
 void ss_scale(Field& y, const double alpha, Field& x)
 {
+   const int n = x.length();                          
+   auto grid_dim = calculate_grid_dim(block_dim, n);
+   kernels::scale<<<grid_dim, block_dim>>>(y.device_data(), x.device_data(), alpha, n);
 }
 
 // computes linear combination of two vectors y := alpha*x + beta*z
