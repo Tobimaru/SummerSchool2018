@@ -92,19 +92,16 @@ double ss_dot(Field const& x, Field const& y)
     return result;
 }
 
-// TODO : implement the dot product with cublas
-// HINT : use cublas_handle() to get the cublas handle
-
 // computes the 2-norm of x
 // x is a vector
 double ss_norm2(Field const& x)
 {
-    double result = 0;
+    double result = 0.;
     const int n = x.length();
-
+    auto h = cublas_handle();
+    cublasDnrm2(h, n, x.device_data(), 1, &result);
     return result;
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 //  blas level 1 vector-vector operations
 ////////////////////////////////////////////////////////////////////////////////
