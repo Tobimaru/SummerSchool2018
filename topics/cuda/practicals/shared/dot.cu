@@ -18,53 +18,42 @@ template <int THREADS>
 __global__
 void dot_gpu_kernel(const double *x, const double *y, double *result, const int n) {
 
-    __shared__ double sums[THREADS];
+    __shared__ double buf[THREADS];
 
-    const auto i = threadIdx.x;
-    
-    sums[i] = x[i] * y[i];
+    const auto gid = threadIdx.x + blockIdx.x * blockDim.x;
+    const auto i = threadIdx.x;   
 
-    __syncthreads();
+    buf[i] = 0.;
+    if (gid < n){  
+        buf[i] = x[gid] * y[gid];
+    }
 
-    int half_n = n/2;
+    int half_n = THREADS/2;
     while (half_n > 0){
-
-        if (i < half_n){
-            sums[i] += sums[half_n + i];
-        }
-        
         __syncthreads();
+        
+        if (i < half_n){
+            buf[i] += buf[half_n + i];
+        }
       
        half_n /= 2;
     }  
 
     if (i == 0){
-        *result = sums[0];
+        atomicAdd(result, buf[0]);
     }
 
-   /*if (i == 0){
-        double sum = 0;
-        
-        for (auto j = 0; j < n; ++j){
-            sum += sums[j];
-        }
-        
-        *result = sum; 
-    }*/
 }
 
 double dot_gpu(const double *x, const double* y, int n) {
     static double* result = malloc_managed<double>(1);
-  
-    const int maxThreads = 1024;
+    *result = 0.0;  
 
-    for (int i = 0; i < n; i += maxThreads)
-    {
-        double sum = 0.0;
-        dot_gpu_kernel<maxThreads><<<1, maxThreads, maxThreads>>>
-        (x+i, y+i, &sum, maxThreads);
-        *result += sum;
-    }
+    const int maxBlockDim = 1024;
+    const int grid_dim = (n + maxBlockDim - 1)/maxBlockDim;
+     
+    dot_gpu_kernel<maxBlockDim><<<grid_dim, maxBlockDim, maxBlockDim>>>
+       (x, y, result, n);
 
     cudaDeviceSynchronize();
     return *result;
