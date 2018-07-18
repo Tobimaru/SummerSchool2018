@@ -55,6 +55,17 @@ namespace kernels {
     __global__
     void stencil_interior(double* S, const double *U) {
         // TODO : implement the interior stencil
+        const auto i = threadIdx.x + blockDim.x * blockIdx.x;
+        const auto j = threadIdx.y + blockDim.y * blockIdx.y;
+        const auto pos = i + j * params.nx;        
+
+        if (i > 0 && i < params.nx-1 && j > 0 && j < params.ny-1){
+           S[pos] = -(4. + params.alpha) * U[pos]
+                    + U[pos - 1] + U[pos + 1] + U[pos + params.nx] + U[pos - params.nx]
+                    + params.alpha * params.x_old[pos]
+                    + params.dxs * U[pos] * (1.0 - U[pos]);
+        }  
+    
         // EXTRA : can you make it use shared memory?
         //  S(i,j) = -(4. + alpha) * U(i,j)               // central point
         //                          + U(i-1,j) + U(i+1,j) // east and west
