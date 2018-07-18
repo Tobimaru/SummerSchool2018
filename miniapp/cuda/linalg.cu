@@ -81,16 +81,14 @@ void cg_init(int nx, int ny)
 //  blas level 1 reductions
 ////////////////////////////////////////////////////////////////////////////////
 
-// TODO implement the dot product with cublas
-// HINT : use cublas_handle() to get the cublas handle
-
 // computes the inner product of x and y
 // x and y are vectors
 double ss_dot(Field const& x, Field const& y)
 {
     double result = 0.;
     const int n = x.length();
-
+    auto h = cublas_handle();
+    cublasDdot(h, n, x.device_data(), 1, y.device_data(), 1, &result);
     return result;
 }
 
