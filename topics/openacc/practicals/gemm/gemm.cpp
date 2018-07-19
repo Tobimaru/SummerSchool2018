@@ -183,8 +183,10 @@ void dgemm_cublas(size_t M, size_t N, size_t K,
 {
     auto cublas_gemm = gemm_fn<T>();
 
+#pragma acc data copyin(A[0:M*K]) copyin(B[0:K*N]) copy(C[0:M*N])
     // TODO: Move data to the GPU
     {
+#pragma acc host_data use_device(A, B, C)
         // TODO: cuBLAS wants device pointers
         {
             if (cublas_gemm(cublas_handle(), CUBLAS_OP_N, CUBLAS_OP_N,
