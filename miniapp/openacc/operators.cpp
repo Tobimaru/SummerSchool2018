@@ -49,9 +49,10 @@ void diffusion(data::Field &U, data::Field &S)
 
     // TODO: Offload the computation of all the grid points to the GPU.
     //       Check the compiler output to verify that you get the parallelism you expect.
-
+#pragma acc data present(U, S, x_old, bndE, bndW, bndN, bndS)
     // the interior grid points
     {
+#pragma acc parallel loop collapse(2)
     for (int j=1; j < jend; j++) {
         for (int i=1; i < iend; i++) {
             S(i,j) = -(4. + alpha) * U(i,j)               // central point
@@ -62,6 +63,7 @@ void diffusion(data::Field &U, data::Field &S)
         }
     }
 
+#pragma acc parallel loop
     // the east boundary
     {
         int i = nx - 1;
@@ -74,6 +76,7 @@ void diffusion(data::Field &U, data::Field &S)
         }
     }
 
+#pragma acc parallel loop
     // the west boundary
     {
         int i = 0;
@@ -89,7 +92,7 @@ void diffusion(data::Field &U, data::Field &S)
     // the north boundary (plus NE and NW corners)
     {
         int j = ny - 1;
-
+#pragma acc parallel num_gangs(1)
         {
             int i = 0; // NW corner
             S(i,j) = -(4. + alpha) * U(i,j)
@@ -98,6 +101,7 @@ void diffusion(data::Field &U, data::Field &S)
                         + dxs * U(i,j) * (1.0 - U(i,j));
         }
 
+#pragma acc parallel loop 
         // north boundary
         for (int i = 1; i < iend; i++)
         {
@@ -107,6 +111,7 @@ void diffusion(data::Field &U, data::Field &S)
                         + dxs * U(i,j) * (1.0 - U(i,j));
         }
 
+#pragma acc parallel num_gangs(1)
         {
             int i = nx-1; // NE corner
             S(i,j) = -(4. + alpha) * U(i,j)
@@ -120,6 +125,7 @@ void diffusion(data::Field &U, data::Field &S)
     {
         int j = 0;
 
+#pragma acc parallel num_gangs(1)
         {
             int i = 0; // SW corner
             S(i,j) = -(4. + alpha) * U(i,j)
@@ -128,6 +134,7 @@ void diffusion(data::Field &U, data::Field &S)
                         + dxs * U(i,j) * (1.0 - U(i,j));
         }
 
+#pragma acc parallel loop
         // south boundary
         for (int i = 1; i < iend; i++)
         {
@@ -137,6 +144,7 @@ void diffusion(data::Field &U, data::Field &S)
                         + dxs * U(i,j) * (1.0 - U(i,j));
         }
 
+#pragma acc parallel num_gangs(1)
         {
             int i = nx - 1; // SE corner
             S(i,j) = -(4. + alpha) * U(i,j)
