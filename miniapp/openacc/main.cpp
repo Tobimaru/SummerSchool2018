@@ -141,6 +141,8 @@ int main(int argc, char* argv[])
     // no larger than 1/8 of both xdim and ydim
     ss_fill(x_new, 0.);
 
+#pragma acc wait
+
     double xc = 1.0 / 4.0;
     double yc = (ny - 1) * options.dx / 4;
     double radius = fmin(xc, yc) / 2.0;
