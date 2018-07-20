@@ -99,10 +99,12 @@ class Field {
     // helpers for coordinating host-device transfers
     /////////////////////////////////////////////////
     void update_host() {
+#pragma acc update self(ptr_[0:length()])
         // TODO: Update the host copy of the data
     }
 
     void update_device() {
+#pragma acc update device(ptr_[0:length()])
         // TODO: Update the device copy of the data
     }
 
@@ -112,6 +114,7 @@ class Field {
         xdim_ = xdim;
         ydim_ = ydim;
         ptr_ = new double[xdim*ydim];
+#pragma acc enter data copyin(this) create(ptr_[0:length()])
         // TODO: Copy the whole object to the GPU.
         //       Pay attention to the order of the copies so that the data
         //       pointed to by `ptr_` is properly attached to the GPU's copy of
@@ -122,6 +125,7 @@ class Field {
     void fill(double val) {
         // initialize the host and device copy at the same time
         // TODO: Offload this loop to the GPU
+#pragma acc data present(ptr_[0:length()])
         for(int i=0; i<xdim_*ydim_; ++i)
             ptr_[i] = val;
 
@@ -132,6 +136,7 @@ class Field {
 
     void free() {
         if (ptr_) {
+#pragma acc exit data delete(ptr_[0:length()]) delete(this)
             // TODO: Delete the copy of this object from the GPU
 
             // NOTE: You will see some OpenACC runtime errors when your program exits
