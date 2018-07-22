@@ -110,9 +110,13 @@ void ss_add_scaled_diff(Field& y, Field const& x, const double alpha,
     const int n = y.length();
 
     // TODO: Offload this loop to the GPU
-#pragma acc parallel loop present(x, y, l, r) async(0)
+    auto y_ptr = y.device_data();
+    auto x_ptr = x.device_data();
+    auto l_ptr = l.device_data();
+    auto r_ptr = r.device_data();
+#pragma acc parallel loop present(x, y, l, r) deviceptr(y_ptr, x_ptr, l_ptr, r_ptr) async(0)
     for (int i = 0; i < n; i++)
-        y[i] = x[i] + alpha * (l[i] - r[i]);
+        y_ptr[i] = x_ptr[i] + alpha * (l_ptr[i] - r_ptr[i]);
 }
 
 // copy one vector into another y := x
