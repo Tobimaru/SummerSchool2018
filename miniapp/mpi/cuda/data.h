@@ -65,7 +65,9 @@ struct SubDomain
     // mpi info
     int size;
     int rank;
+
     // add communicator and RMA windows
+    MPI_COMM comm_cart;
 
     // x and y dimension in grid points of the sub-domain
     int nx;
