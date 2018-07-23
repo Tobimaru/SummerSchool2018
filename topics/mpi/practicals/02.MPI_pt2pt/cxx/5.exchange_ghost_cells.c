@@ -83,6 +83,28 @@ int main(int argc, char *argv[])
     rank_bottom = -1;/* find the rank of the top neighbor */
     rank_top = -1;/* find the rank of the bottom neighbor */
 
+    const int grid_dim = 4;
+    const int grid_size = 16;
+
+    if (rank < grid_dim) {
+        rank_top = (grid_dim - 1) * grid_dim + rank;
+    } else {
+        rank_top = rank - grid_dim;
+    }
+
+    if (rank >= ((grid_dim - 1) * grid_dim)) {
+        rank_bottom = rank % ((grid_dim -1) * grid_dim) ;
+    } else {
+        rank_bottom = rank + grid_dim;
+    }
+   
+    //rank_bottom=(rank+4)%16;
+    //rank_top=(rank+16-4)%16;
+ 
+    //printf("rank: %d, top: %d, bottom: %d \n", rank, rank_top, rank_bottom);
+
+    int start_top = DOMAINSIZE + 1;
+    int start_bottom = DOMAINSIZE * (DOMAINSIZE - 1) - SUBDOMAIN - 1;
 
     //  ghost cell exchange with the neighbouring cells (cyclic) to the bottom and to the top using:
     //  a) MPI_Send, MPI_Irecv, MPI_Wait
@@ -91,15 +113,18 @@ int main(int argc, char *argv[])
 
     //  to the top
 
-    // a)
-
+    // a) 
+    MPI_Irecv(&data[DOMAINSIZE*DOMAINSIZE - SUBDOMAIN - 1], SUBDOMAIN, MPI_DOUBLE, rank_bottom, 0, MPI_COMM_WORLD, &request);
+    MPI_Send(&data[start_top], SUBDOMAIN, MPI_DOUBLE, rank_top, 0, MPI_COMM_WORLD);               
+    MPI_Wait(&request, &status);
     // b)
-
     // c)
 
     //  to the bottom
     // a)
-
+    MPI_Irecv(&data[1], SUBDOMAIN, MPI_DOUBLE, rank_top, 0, MPI_COMM_WORLD, &request);
+    MPI_Send(&data[start_bottom], SUBDOMAIN, MPI_DOUBLE, rank_bottom, 0, MPI_COMM_WORLD);
+    MPI_Wait(&request, &status);
     // b)
 
     // c)

@@ -39,11 +39,14 @@ int main (int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     /* Set cartesian topology. */
-
+    periods[0] = 1;
+    reorder = 1;
+    dims[0] = size;
+    MPI_Cart_create(MPI_COMM_WORLD, 1, dims, periods, reorder, &new_comm); 
 
     /* Get nearest neighbour rank. */
-
-
+    MPI_Cart_shift(new_comm, 0, 1, &left, &right);
+    MPI_Comm_rank(new_comm, &my_rank);
     /* Compute global sum. */
     sum = 0;
     snd_buf = my_rank;

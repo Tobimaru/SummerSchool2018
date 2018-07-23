@@ -41,6 +41,15 @@ int main(int argc, char *argv[])
     }
     /* send the contents of number from rank 0 to rank 1 using MPI_Send --- MPI_Recv */
 
+    if (rank == 0) {
+        MPI_Send(&number, 1, MPI_INTEGER, 1, 0, MPI_COMM_WORLD);
+    }
+    
+    if (rank == 1) {
+        MPI_Status status;
+        MPI_Recv(&number, 1, MPI_INTEGER, 0, 0, MPI_COMM_WORLD, &status);    
+    }
+
     if (rank == 1)
         printf("The communicated number is %i\n", number);
     MPI_Finalize();

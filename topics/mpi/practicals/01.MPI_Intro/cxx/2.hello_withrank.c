@@ -23,11 +23,23 @@ int main(int argc, char *argv[])
     MPI_Init(&argc, &argv);
 
     /* Get the rank of each process */
+    int my_rank = -1;
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
     /* Get the size of the communicator */
+    int total_size = -1;
+    MPI_Comm_size(MPI_COMM_WORLD, &total_size);
 
     /* Write code such that every process writes its rank and the size of the communicator,
      * but only process 0 prints "hello world*/
+    if (my_rank == 0)
+    {
+        printf("rank: %i, size: %i : hello world\n", my_rank, total_size);
+    }
+    else
+    { 
+        printf("rank: %i, size: %i \n", my_rank, total_size);
+    }   
 
     MPI_Finalize();
     return 0;

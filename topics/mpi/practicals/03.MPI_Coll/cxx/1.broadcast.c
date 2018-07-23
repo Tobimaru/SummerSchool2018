@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
     }
 
     /* broadcast the value of data of rank 0 to all ranks */
+    MPI_Bcast(&data, 1, MPI_INTEGER, 0, MPI_COMM_WORLD);
 
     printf("I am rank %i and the value is %i\n", rank, data);
     MPI_Finalize();

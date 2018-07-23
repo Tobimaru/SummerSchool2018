@@ -17,14 +17,16 @@
 
 #include <stdio.h>
 /* include mpi header file */
+#include <mpi.h>
 
 int main(int argc, char *argv[])
 {
 
     /* initialize MPI */
-
+    MPI_Init(&argc, &argv);
     /* print hello world from each process */
-
+    printf("hello world\n");
     /* finalize MPI */
+    MPI_Finalize();
     return 0;
 }

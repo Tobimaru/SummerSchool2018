@@ -40,6 +40,9 @@
 #define SUM_SIZE (1*1024)
 #define MAX_SIZE (1<<29) /* 512 MBytes */
 
+#define PING 0
+#define PONG 1
+
 int main(int argc, char *argv[])
 {
     int my_rank, k;
@@ -63,12 +66,23 @@ int main(int argc, char *argv[])
     length_of_message = INI_SIZE;
 
     while(length_of_message <= MAX_SIZE) {
+
         /* Write a loop of NMESSAGES iterations which do a ping pong.
          * Make the size of the message variable and display the bandwidth for each of them.
          * What do you observe? (plot it)
          */
+
         start = MPI_Wtime();
 
+        if (my_rank == 0) {
+            MPI_Send(&buffer, length_of_message, MPI_FLOAT, 1, PING, MPI_COMM_WORLD);
+            MPI_Recv(&buffer, length_of_message, MPI_FLOAT, 1, PONG, MPI_COMM_WORLD, &status);   
+        }
+
+        if (my_rank == 1) {
+            MPI_Recv(&buffer, length_of_message, MPI_FLOAT, 0, PING, MPI_COMM_WORLD, &status);   
+            MPI_Send(&buffer, length_of_message, MPI_FLOAT, 0, PONG, MPI_COMM_WORLD);
+        }
         stop = MPI_Wtime();
         if (my_rank == 0) {
             time = stop - start;
