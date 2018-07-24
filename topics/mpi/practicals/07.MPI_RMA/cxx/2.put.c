@@ -36,8 +36,13 @@ int main(int argc, char *argv[])
         left_rank = size -1;
 
     // create window
+    MPI_Win window;
+    MPI_Aint extent;
+    MPI_Type_extent(MPI_INT, &extent);
+    MPI_Win_create(&number, extent, extent, MPI_INFO_NULL, MPI_COMM_WORLD, &window);  
 
     //passive synchronization + put
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, left_rank, 0. &window);
 
     // synchronization?
 

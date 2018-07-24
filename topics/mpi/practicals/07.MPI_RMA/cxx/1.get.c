@@ -37,9 +37,15 @@ int main(int argc, char *argv[])
         left_rank = size -1;
 
     // create window
+    MPI_Win window;
+    MPI_Aint extent;
+    MPI_Type_extent(MPI_INT, &extent);
+    MPI_Win_allocate(extent, extent, MPI_INFO_NULL, MPI_COMM_WORLD, &win_buffer, &window);  
     *win_buffer = rank;
-
     //active synchronization + get
+    MPI_Win_fence(0, window);
+    MPI_Get(&number, 1, MPI_INT, left_rank, 0, 1, MPI_INT, window);
+    MPI_Win_fence(0, window); 
 
     printf("My rank is %d, my number is: %d",rank, number);
     if (rank-number == 1 || number-rank==size-1) {
