@@ -6,6 +6,8 @@
 
 #include "cuda_helpers.h"
 
+#include <mpi.h>
+
 namespace data
 {
 
@@ -67,7 +69,12 @@ struct SubDomain
     int rank;
 
     // add communicator and RMA windows
-    MPI_COMM comm_cart;
+    MPI_Comm comm_cart;
+
+    MPI_Win north_win;
+    MPI_Win south_win;
+    MPI_Win east_win;
+    MPI_Win west_win;
 
     // x and y dimension in grid points of the sub-domain
     int nx;

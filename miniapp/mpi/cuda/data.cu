@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include <mpi.h>
+//#include <mpi.h>
 
 #include "data.h"
 
@@ -40,14 +40,14 @@ void SubDomain::init(int mpi_rank, int mpi_size, Discretization& discretization)
     // create a 2D non-periodic cartesian topology
     int periods[2] = { 0, 0 };
 
-    MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 0, &comm_cart)
+    MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 0, &comm_cart);
 
     // retrieve coordinates of the rank in the topology
     MPI_Comm_rank(comm_cart, &rank);    
 
     int coords[2];
 
-    MPI_Cart_coords(comm_cart, cart_rank, 2, coords);  
+    MPI_Cart_coords(comm_cart, rank, 2, coords);  
 
     domy = coords[0]+1;
     domx = coords[1]+1;
@@ -57,8 +57,8 @@ void SubDomain::init(int mpi_rank, int mpi_size, Discretization& discretization)
    
     //TODO: what value if only one neighbour exists?
 
-    MPI_Cart_shift(comm_cart, 0, 1, &neighbour_east, &neighbour_west);
-    MPI_Cart_shift(comm_cart, 1, 1, &neighbour_north, &neighbour_south);
+    MPI_Cart_shift(comm_cart, 1, 1, &neighbour_west, &neighbour_east);
+    MPI_Cart_shift(comm_cart, 0, 1, &neighbour_south, &neighbour_north);
 
     // get bounding box
     nx = discretization.nx / ndomx;

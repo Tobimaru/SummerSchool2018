@@ -262,35 +262,73 @@ void exchange_rdma(data::Field const& U) {
 
     cudaDeviceSynchronize();
 
-    MPI_Status status;
+    int count = 0;
+
+    if (domain.neighbour_north > -1) {
+        count += 2;
+    }   
+
+    if (domain.neighbour_south > -1) {
+        count += 2;
+    }   
+    if (domain.neighbour_east > -1) {
+        count += 2;
+    }   
+    if (domain.neighbour_west > -1) {
+        count += 2;
+    }   
+
+    const int number_exchanges = count;
+
+    MPI_Status statuses[number_exchanges];
+    MPI_Request requests[number_exchanges];
+
+    count = 0;
 
     if(domain.neighbour_north>=0) {
-        pack_buffer(U, bufferN, 0, 0, 1); 
-        MPI_Sendrecv(&bufferN.device_data(), bufferN.length(), MPI_DOUBLE, 
-                     domain.neighbour_north, 0, &bndS, bndS.length(), MPI_DOUBLE, 
-                     domain.neighbour_south, 0, domain.comm_cart, &status);
+        
+        pack_buffer(U, buffN, 0, ny-1, 1);
+        MPI_Isend(buffN.device_data(), buffN.length(), MPI_DOUBLE, 
+                     domain.neighbour_north, 0, domain.comm_cart, &requests[count]);
+        count++;
+        MPI_Irecv(bndN.device_data(), bndN.length(), MPI_DOUBLE, 
+                    domain.neighbour_north, 0, domain.comm_cart, &requests[count]);
+        count++;
     }
 
     if(domain.neighbour_south>=0) {
-        pack_buffer(U, bufferS, 0, U.ydim()-1, 1); 
-        MPI_Sendrecv(&bufferS.device_data(), bufferS.length(), MPI_DOUBLE, 
-                     domain.neighbour_south, 0, &bndN, bndN.length(), MPI_DOUBLE, 
-                     domain.neighbour_north, 0, domain.comm_cart, &status);
+        pack_buffer(U, buffS, 0, 0, 1); 
+        
+        MPI_Isend(buffS.device_data(), buffS.length(), MPI_DOUBLE, 
+                     domain.neighbour_south, 0, domain.comm_cart, &requests[count]);
+        count++;
+        MPI_Irecv(bndS.device_data(), bndS.length(), MPI_DOUBLE, 
+                    domain.neighbour_south, 0, domain.comm_cart, &requests[count]);
+        count++;
     }
 
     if(domain.neighbour_east>=0) {
-        pack_buffer(U, bufferE, 0, 0, U.xdim()); 
-        MPI_Sendrecv(&bufferE.device_data(), bufferE.length(), MPI_DOUBLE, 
-                     domain.neighbour_east, 0, &bndW, bndW.length(), MPI_DOUBLE, 
-                     domain.neighbour_west, 0, domain.comm_cart, &status);
+        pack_buffer(U, buffE, nx - 1, 0, nx); 
+        
+        MPI_Isend(buffE.device_data(), buffE.length(), MPI_DOUBLE, 
+                     domain.neighbour_east, 0, domain.comm_cart, &requests[count]);
+        count++;
+        MPI_Irecv(bndE.device_data(), bndE.length(), MPI_DOUBLE, 
+                    domain.neighbour_east, 0, domain.comm_cart, &requests[count]);
+        count++;
     }
 
     if(domain.neighbour_west>=0) {
-        pack_buffer(U, bufferW, U.xdim() - 1, 0, U.xdim()); 
-        MPI_Sendrecv(&bufferW.device_data(), bufferW.length(), MPI_DOUBLE, 
-                     domain.neighbour_west, 0, &bndE, bndE.length(), MPI_DOUBLE, 
-                     domain.neighbour_east, 0, domain.comm_cart, &status);
+        pack_buffer(U, buffW, 0, 0, nx); 
+        
+        MPI_Isend(buffW.device_data(), buffW.length(), MPI_DOUBLE, 
+                     domain.neighbour_west, 0, domain.comm_cart, &requests[count]);
+        count++;
+        MPI_Irecv(bndW.device_data(), bndW.length(), MPI_DOUBLE, 
+                    domain.neighbour_west, 0, domain.comm_cart, &requests[count]);
     }
+
+    MPI_Waitall(number_exchanges, requests, statuses);
 }
 
 // overlap communication by computation by splitting the exchange
@@ -467,7 +505,7 @@ void diffusion(data::Field const& U, data::Field &S)
     }
 
     //do exchange
-    void exchange_rdma(U);
+    exchange_rdma(U);
 
     // apply stencil to the interior grid points
     auto calculate_grid_dim = [] (size_t n, size_t block_dim) {
