@@ -162,6 +162,9 @@ void cg_init(int nx, int ny)
 // x and y are vectors on length N
 double ss_dot(Field const& x, Field const& y)
 {
+
+//Fields are initialized to be within the boundaries of the subdomain (see main.cu, line 64)
+
     double result = 0;
     double result_global = 0;
     const int N = x.length();
@@ -173,8 +176,9 @@ double ss_dot(Field const& x, Field const& y)
             y.device_data(), 1,
             &result
         );
-
-
+    
+    MPI_Allreduce(&result, &result_global, 1, MPI_DOUBLE, MPI_SUM, domain.com_cart);   
+ 
     return result_global;
 }
 
@@ -197,6 +201,7 @@ double ss_norm2(Field const& x)
     // partial sums before taking sqrt of the full global sum
     result *= result;
 
+    MPI_Allreduce(&result, &result_global, 1, MPI_DOUBLE, MPI_SUM, domain.com_cart);   
 
     return sqrt(result_global);
 }
