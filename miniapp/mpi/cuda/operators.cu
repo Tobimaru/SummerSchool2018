@@ -263,12 +263,19 @@ void exchange_rdma(data::Field const& U) {
     cudaDeviceSynchronize();
 
     if(domain.neighbour_north>=0) {
+        pack_buffer(U, bufferN, 0, 0, 1); 
     }
+
     if(domain.neighbour_south>=0) {
+        pack_buffer(U, bufferS, 0, U.ydim()-1, 1); 
     }
+
     if(domain.neighbour_east>=0) {
+        pack_buffer(U, bufferE, 0, 0, U.xdim()); 
     }
+
     if(domain.neighbour_west>=0) {
+        pack_buffer(U, bufferW, U.xdim() - 1, 0, U.xdim()); 
     }
 }
 
