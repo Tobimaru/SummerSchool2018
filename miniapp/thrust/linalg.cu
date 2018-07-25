@@ -81,6 +81,7 @@ struct lcomb_functor
     __host__ __device__
         double operator()(const double& x, const double& y) const {
 // TODO:  program the return value
+                return a * x + b * y;
         }
 };
 
