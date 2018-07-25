@@ -124,6 +124,7 @@ double dot_thrust(thrust::device_vector<double>& X, thrust::device_vector<double
 double norm2_thrust(thrust::device_vector<double>& X)
 {
 // TODO: implement the norm using sqrt and thrust::inner_product
+   return sqrt(thrust::inner_product(X.begin(), X.end(), X.begin(), 0.0)); 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
