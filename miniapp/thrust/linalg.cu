@@ -93,6 +93,7 @@ struct add_scaled_diff_functor
     __host__ __device__
         void operator()(Tuple t) const {
 // TODO: program Y = X + a * (L - R); where the arguments of the tuple are O:X  1:L  2:R  3:Y
+            thrust::get<3>(t) = thrust::get<0>(t) + a*(thrust::get<1>(t) - thrust::get<2>(t));
         }
 };
 
@@ -138,6 +139,9 @@ void add_scaled_diff_thrust(double A, thrust::device_vector<double>& X, thrust::
                             thrust::device_vector<double>& R, thrust::device_vector<double>& Y)
 {
 // TODO:  make tuple using make_zip_iterator where T = (X,L,R,Y)
+    thrust::for_each(
+        thrust::make_zip_iterator(thrust::make_tuple(X.begin(), L.begin(), R.begin(), Y.begin())),
+        thrust::make_zip_iterator(thrust::make_tuple(X.end(), L.end(), R.end(), Y.end())), add_scaled_diff_functor(A));
 }
 
 // copy one vector into another y := x
