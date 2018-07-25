@@ -50,7 +50,7 @@ struct boundary_functor
       
       if(is_west) {
         thrust::get<7>(t) = -(4. + alpha) * my_val
-                                                     + *(&thrust::get<6>(t)+1)
+                          + *(&thrust::get<6>(t)+1)
                           + *(&thrust::get<6>(t)+nx) + *(&thrust::get<6>(t)-nx)
                           + *(&thrust::get<1>(t)-nmj) // BND_W(j)
                           + alpha * thrust::get<5>(t)
@@ -82,13 +82,35 @@ struct boundary_functor
       }
 
 // TODO:  implement the four corners:  SW, NW, SE, NE
+
       if(is_sw) {
+        thrust::get<7>(t) = -(4. + alpha) * my_val + *(&thrust::get<6>(t)+nx) + 
+                            *(&thrust::get<6>(t) + 1) + *(&thrust::get<1>(t) - nmj) +
+                            *(&thrust::get<3>(t) - nmi)
+                            + alpha * thrust::get<5>(t)
+                            + dxs * my_val * (1.0 - my_val);
       }
+
       if(is_nw) {
+        thrust::get<7>(t) = -(4. + alpha) * my_val + *(&thrust::get<6>(t)-nx) + 
+                            *(&thrust::get<6>(t) + 1) + *(&thrust::get<1>(t) - nmj) +
+                            *(&thrust::get<4>(t) - nmi)
+                            + alpha * thrust::get<5>(t)
+                            + dxs * my_val * (1.0 - my_val);
       }
       if(is_se) {
+        thrust::get<7>(t) = -(4. + alpha) * my_val + *(&thrust::get<6>(t)+nx) + 
+                            *(&thrust::get<6>(t) - 1) + *(&thrust::get<2>(t) - nmj) +
+                            *(&thrust::get<3>(t) - nmi)
+                            + alpha * thrust::get<5>(t)
+                            + dxs * my_val * (1.0 - my_val);
       }
       if(is_ne) {
+        thrust::get<7>(t) = -(4. + alpha) * my_val + *(&thrust::get<6>(t)-nx) + 
+                            *(&thrust::get<6>(t) - 1) + *(&thrust::get<2>(t) - nmj) +
+                            *(&thrust::get<4>(t) - nmi)
+                            + alpha * thrust::get<5>(t)
+                            + dxs * my_val * (1.0 - my_val);
       }
     }
 };
@@ -136,6 +158,12 @@ void diffusion_thrust(int nx, int ny, double alpha, double dxs,
                      interior_functor(nx,ny,alpha,dxs));
 
 // TODO:  zip up the tuple for the boundary_functor and invoke with for_each
+//  arguments: 0:count  1:BND_W  2:BND_E  3:BND_S  4:BND_N  5:X_OLD  6:U  7:S
+    thrust::for_each(
+        thrust::make_zip_iterator(thrust::make_tuple(n_first, BND_W.begin(), BND_E.begin(), BND_S.begin(), BND_N.begin(), X_OLD.begin(), U.begin(), S.begin())),
+        thrust::make_zip_iterator(thrust::make_tuple(n_last, BND_W.end(), BND_E.end(), BND_S.end(), BND_N.end(), X_OLD.end(), U.end(), S.end())),        
+        boundary_functor(nx, ny, alpha, dxs));
+
 }
 
 
